@@ -9,14 +9,17 @@ const stats = [
 
 const features = [
   {
+    icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png',
     title: 'Verified Listings',
     desc: 'Every listing goes through a manual verification process before going live.',
   },
   {
+    icon: 'https://cdn-icons-png.flaticon.com/512/2489/2489756.png',
     title: 'Zero Brokerage',
     desc: 'Connect directly with property owners. No middlemen, no hidden charges.',
   },
   {
+    icon: 'https://cdn-icons-png.flaticon.com/512/1380/1380338.png',
     title: 'Instant Inquiry',
     desc: 'Send inquiries to owners and get responses within hours, not days.',
   },
@@ -32,8 +35,14 @@ const Home = () => {
     <div className="min-h-screen bg-white">
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-28">
+      <div className="relative text-white">
+        <img
+          src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1600&auto=format&fit=crop"
+          alt="hero"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/85 to-indigo-900/75" />
+        <div className="relative max-w-6xl mx-auto px-6 py-32">
           <p className="text-blue-200 text-sm font-medium uppercase tracking-widest mb-4">
             India's Fastest Growing Rental Platform
           </p>
@@ -104,7 +113,7 @@ const Home = () => {
               key={f.title}
               className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition"
             >
-              <div className="w-10 h-10 bg-blue-50 rounded-xl mb-5" />
+              <img src={f.icon} alt={f.title} className="w-10 h-10 mb-5" />
               <h3 className="text-lg font-semibold text-gray-800 mb-2">{f.title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
             </div>
@@ -138,30 +147,38 @@ const Home = () => {
       </div>
 
       {/* CTA */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center py-20">
-        <h2 className="text-3xl font-bold mb-4">Ready to find your perfect home?</h2>
-        <p className="text-blue-100 mb-8 max-w-md mx-auto">
-          Join thousands of tenants who found their ideal PG or flat through PGFinder.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => navigate('/listings')}
-            className="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition"
-          >
-            Browse Listings
-          </button>
-          <button
-            onClick={() => navigate('/register')}
-            className="border border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
-          >
-            Create Account
-          </button>
+      <div className="relative text-white text-center py-24">
+        <img
+          src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1600&auto=format&fit=crop"
+          alt="cta"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-blue-900/80" />
+        <div className="relative">
+          <h2 className="text-3xl font-bold mb-4">Ready to find your perfect home?</h2>
+          <p className="text-blue-100 mb-8 max-w-md mx-auto">
+            Join thousands of tenants who found their ideal PG or flat through PGFinder.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => navigate('/listings')}
+              className="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition"
+            >
+              Browse Listings
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="border border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
+            >
+              Create Account
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Footer */}
       <div className="border-t border-gray-100 py-8 text-center text-gray-400 text-sm">
-        2026 PGFinder. Built for renters, by renters.
+        2026 PGFinder. Built by <span className="text-blue-500 font-medium">Ashesh Singh</span>. All rights reserved.
       </div>
     </div>
   );
