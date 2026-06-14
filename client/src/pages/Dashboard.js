@@ -103,10 +103,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
             <p className="text-gray-500 text-sm mt-1">Welcome back, {user?.name}</p>
@@ -114,7 +114,7 @@ const Dashboard = () => {
           {user?.role === 'owner' && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition text-sm"
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition text-sm w-full sm:w-auto"
             >
               {showForm ? 'Cancel' : '+ Add Listing'}
             </button>
@@ -123,16 +123,16 @@ const Dashboard = () => {
 
         {/* Add Listing Form */}
         {showForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6 mb-8">
             <h2 className="font-semibold text-gray-800 mb-5">New Listing</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="col-span-1 md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Title</label>
                 <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
                   placeholder="Spacious PG in Sector 62" />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
                 <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition resize-none"
@@ -201,13 +201,13 @@ const Dashboard = () => {
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
                   placeholder="201301" />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Amenities (comma separated)</label>
                 <input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
                   placeholder="WiFi, AC, Meals, Laundry" />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Images (max 5)</label>
                 <input
                   type="file"
@@ -224,7 +224,7 @@ const Dashboard = () => {
             <button
               onClick={handleCreate}
               disabled={uploading}
-              className="mt-5 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
+              className="mt-5 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50 w-full sm:w-auto"
             >
               {uploading ? 'Uploading images...' : 'Create Listing'}
             </button>
@@ -232,7 +232,7 @@ const Dashboard = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
             { label: 'Total Listings', value: listings.length },
             { label: 'Available', value: listings.filter((l) => l.isAvailable).length },
@@ -245,7 +245,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Listings Table */}
+        {/* Listings — mobile cards / desktop table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800">My Listings</h2>
@@ -253,47 +253,62 @@ const Dashboard = () => {
           {listings.length === 0 ? (
             <div className="text-center py-12 text-gray-400 text-sm">No listings yet. Add your first listing.</div>
           ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                <tr>
-                  <th className="text-left px-5 py-3">Title</th>
-                  <th className="text-left px-5 py-3">City</th>
-                  <th className="text-left px-5 py-3">Rent</th>
-                  <th className="text-left px-5 py-3">Type</th>
-                  <th className="text-left px-5 py-3">Status</th>
-                  <th className="text-left px-5 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                    <tr>
+                      <th className="text-left px-5 py-3">Title</th>
+                      <th className="text-left px-5 py-3">City</th>
+                      <th className="text-left px-5 py-3">Rent</th>
+                      <th className="text-left px-5 py-3">Type</th>
+                      <th className="text-left px-5 py-3">Status</th>
+                      <th className="text-left px-5 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {listings.map((listing) => (
+                      <tr key={listing._id} className="hover:bg-gray-50 transition">
+                        <td className="px-5 py-4 text-sm font-medium text-gray-800">{listing.title}</td>
+                        <td className="px-5 py-4 text-sm text-gray-500">{listing.address?.city}</td>
+                        <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
+                        <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
+                        <td className="px-5 py-4">
+                          <span className={"text-xs font-medium px-3 py-1 rounded-full " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
+                            {listing.isAvailable ? 'Available' : 'Unavailable'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 flex gap-2">
+                          <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 hover:underline">Inquiries</button>
+                          <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 hover:underline">Delete</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-gray-100">
                 {listings.map((listing) => (
-                  <tr key={listing._id} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-4 text-sm font-medium text-gray-800">{listing.title}</td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{listing.address?.city}</td>
-                    <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
-                    <td className="px-5 py-4">
-                      <span className={"text-xs font-medium px-3 py-1 rounded-full " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
+                  <div key={listing._id} className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-800 flex-1 pr-2">{listing.title}</p>
+                      <span className={"text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
                         {listing.isAvailable ? 'Available' : 'Unavailable'}
                       </span>
-                    </td>
-                    <td className="px-5 py-4 flex gap-2">
-                      <button
-                        onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        Inquiries
-                      </button>
-                      <button
-                        onClick={() => handleDelete(listing._id)}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-1">{listing.address?.city} · {listing.type}</p>
+                    <p className="text-sm text-blue-600 font-medium mb-3">Rs {listing.rent?.toLocaleString()}/mo</p>
+                    <div className="flex gap-3">
+                      <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 font-medium hover:underline">View Inquiries</button>
+                      <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 font-medium hover:underline">Delete</button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -305,14 +320,14 @@ const Dashboard = () => {
             </div>
             <div className="divide-y divide-gray-50">
               {inquiries.map((inq) => (
-                <div key={inq._id} className="px-5 py-4">
-                  <div className="flex items-start justify-between">
-                    <div>
+                <div key={inq._id} className="px-4 md:px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800">{inq.tenant?.name}</p>
-                      <p className="text-sm text-gray-500 mt-1">{inq.message}</p>
+                      <p className="text-sm text-gray-500 mt-1 break-words">{inq.message}</p>
                       <p className="text-xs text-gray-400 mt-1">{inq.tenant?.email} · {inq.tenant?.phone}</p>
                     </div>
-                    <span className={"text-xs font-medium px-3 py-1 rounded-full " + (
+                    <span className={"text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap " + (
                       inq.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :
                       inq.status === 'responded' ? 'bg-green-50 text-green-600' :
                       'bg-gray-50 text-gray-500'

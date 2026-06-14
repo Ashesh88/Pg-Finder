@@ -42,25 +42,25 @@ const Home = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/85 to-indigo-900/75" />
-        <div className="relative max-w-6xl mx-auto px-6 py-32">
+        <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32">
           <p className="text-blue-200 text-sm font-medium uppercase tracking-widest mb-4">
             India's Fastest Growing Rental Platform
           </p>
-          <h1 className="text-5xl font-bold leading-tight mb-5">
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
             Find Verified PGs & Flats <br />
             <span className="text-yellow-300">Near You. Instantly.</span>
           </h1>
-          <p className="text-blue-100 text-lg mb-10 max-w-xl">
+          <p className="text-blue-100 text-base md:text-lg mb-10 max-w-xl">
             No brokerage. No fake listings. Just real homes, real owners, and a seamless renting experience.
           </p>
 
           {/* Search */}
-          <div className="bg-white rounded-2xl p-2 flex gap-2 max-w-2xl shadow-2xl">
+          <div className="bg-white rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-2xl shadow-2xl">
             <input
               type="text"
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
-              placeholder="Search by city — Noida, Gurgaon, Bangalore..."
+              placeholder="Search by city — Noida, Gurgaon..."
               className="flex-1 px-4 py-3 text-gray-700 outline-none rounded-xl text-sm"
             />
             <button
@@ -89,7 +89,7 @@ const Home = () => {
 
       {/* Stats */}
       <div className="border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-3 gap-8 text-center">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           {stats.map((stat) => (
             <div key={stat.label}>
               <p className="text-4xl font-bold text-blue-600">{stat.value}</p>
@@ -100,14 +100,14 @@ const Home = () => {
       </div>
 
       {/* Features */}
-      <div className="max-w-6xl mx-auto px-6 py-20">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-20">
         <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest text-center mb-3">
           Why PGFinder
         </p>
-        <h2 className="text-3xl font-bold text-gray-800 mb-12 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-12 text-center">
           Renting made simple, transparent & fast
         </h2>
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((f) => (
             <div
               key={f.title}
@@ -123,14 +123,14 @@ const Home = () => {
 
       {/* How it works */}
       <div className="bg-gray-50 py-20">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
           <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest text-center mb-3">
             How It Works
           </p>
-          <h2 className="text-3xl font-bold text-gray-800 mb-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-12 text-center">
             Get into your new home in 3 steps
           </h2>
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: '01', title: 'Search', desc: 'Browse thousands of verified listings filtered by city, budget, and preferences.' },
               { step: '02', title: 'Inquire', desc: 'Send a direct inquiry to the owner. No broker involved, no commission.' },
@@ -154,21 +154,21 @@ const Home = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-blue-900/80" />
-        <div className="relative">
-          <h2 className="text-3xl font-bold mb-4">Ready to find your perfect home?</h2>
-          <p className="text-blue-100 mb-8 max-w-md mx-auto">
+        <div className="relative px-4">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to find your perfect home?</h2>
+          <p className="text-blue-100 mb-8 max-w-md mx-auto text-sm md:text-base">
             Join thousands of tenants who found their ideal PG or flat through PGFinder.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => navigate('/listings')}
-              className="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition"
+              className="w-full md:w-auto bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition"
             >
               Browse Listings
             </button>
             <button
               onClick={() => navigate('/register')}
-              className="border border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
+              className="w-full md:w-auto border border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
             >
               Create Account
             </button>
