@@ -9,7 +9,7 @@ const ListingDetail = () => {
   const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('Hi, I\'m interested in this property. Is it still available?');
+  const [message, setMessage] = useState("Hi, I'm interested in this property. Is it still available?");
   const [inquirySent, setInquirySent] = useState(false);
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
@@ -59,7 +59,7 @@ const ListingDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Left — images + details */}
+          {/* Left */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
               <img
@@ -129,7 +129,7 @@ const ListingDetail = () => {
             </div>
           </div>
 
-          {/* Right — owner + inquiry */}
+          {/* Right */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
               <h3 className="font-semibold text-gray-800 mb-4">Listed by</h3>
@@ -143,7 +143,7 @@ const ListingDetail = () => {
                 </div>
               </div>
               {listing.owner?.phone && (
-                
+                <a
                   href={`tel:${listing.owner.phone}`}
                   className="w-full block text-center bg-green-50 text-green-600 font-medium py-3 rounded-xl hover:bg-green-100 transition text-sm"
                 >
