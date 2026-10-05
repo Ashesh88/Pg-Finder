@@ -1,5 +1,7 @@
 const Listing = require('../models/Listing');
 
+const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const createListing = async (req, res) => {
   try {
     const listing = await Listing.create({ ...req.body, owner: req.user.id });
@@ -14,7 +16,13 @@ const getAllListings = async (req, res) => {
     const { city, type, gender, furnishing, minRent, maxRent } = req.query;
     let filter = { isAvailable: true };
 
-    if (city) filter['address.city'] = new RegExp(city, 'i');
+    if (city && city.trim()) {
+      filter['address.city'] = {
+        $regex: `^${escapeRegExp(city.trim())}$`,
+        $options: 'i',
+      };
+    }
+
     if (type) filter.type = type;
     if (gender) filter.gender = gender;
     if (furnishing) filter.furnishing = furnishing;
