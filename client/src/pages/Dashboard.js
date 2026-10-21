@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Building2,
+  CheckCircle2,
+  MessageSquare,
+  Plus,
+  Edit3,
+  Trash2,
+  ExternalLink,
+  X,
+  AlertCircle,
+  User,
+  Mail,
+  Phone,
+} from 'lucide-react';
 import API from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,18 +22,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [inquiries, setInquiries] = useState([]);
-  const [activeTab, setActiveTab] = useState('listings');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
+
   const initialForm = {
-    title: '', description: '', type: 'PG', gender: 'any',
-    rent: '', deposit: '', furnishing: 'unfurnished',
-    city: '', state: '', street: '', pincode: '',
+    title: '',
+    description: '',
+    type: 'PG',
+    gender: 'any',
+    rent: '',
+    deposit: '',
+    furnishing: 'unfurnished',
+    city: '',
+    state: '',
+    street: '',
+    pincode: '',
     amenities: '',
   };
   const [form, setForm] = useState(initialForm);
@@ -34,17 +55,15 @@ const Dashboard = () => {
     setErrorMsg('');
     try {
       if (user?.role === 'owner') {
-        // Optimized: Fetch owner's listings directly from server
         const { data } = await API.get('/listings/my');
         setListings(data);
       } else {
-        // Tenant dashboard: Fetch tenant's inquiries
         const { data } = await API.get('/inquiries/my');
         setInquiries(data);
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to load dashboard data. Please try again.');
+      setErrorMsg('Failed to synchronize dashboard telemetry.');
     } finally {
       setLoading(false);
     }
@@ -77,9 +96,10 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!form.title || !form.rent || !form.city) {
-      alert('Please fill in Title, Rent, and City');
+      alert('Please complete all required fields.');
       return;
     }
     try {
@@ -97,13 +117,9 @@ const Dashboard = () => {
       };
 
       if (editingId) {
-        // Edit Mode
-        if (uploadedUrls.length > 0) {
-          payload.images = uploadedUrls;
-        }
+        if (uploadedUrls.length > 0) payload.images = uploadedUrls;
         await API.put('/listings/' + editingId, payload);
       } else {
-        // Create Mode
         payload.images = uploadedUrls;
         await API.post('/listings', payload);
       }
@@ -115,7 +131,7 @@ const Dashboard = () => {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Error saving listing');
+      alert(err.response?.data?.message || 'Error executing request.');
     }
   };
 
@@ -149,7 +165,7 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this listing?')) return;
+    if (!window.confirm('Confirm deletion of this listing?')) return;
     try {
       await API.delete('/listings/' + id);
       fetchData();
@@ -158,20 +174,26 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading dashboard...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
-
-        {/* Header */}
+    <div className="min-h-screen bg-zinc-50/50 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Welcome back, <span className="font-semibold text-gray-700">{user?.name || 'User'}</span> ({user?.role})
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900">Console Dashboard</h1>
+            <p className="text-zinc-500 text-xs sm:text-sm mt-1">
+              Active Session: <span className="font-semibold text-zinc-800">{user?.name}</span> ({user?.role?.toUpperCase()})
             </p>
           </div>
+
           {user?.role === 'owner' && (
             <button
               onClick={() => {
@@ -183,276 +205,382 @@ const Dashboard = () => {
                   setShowForm(true);
                 }
               }}
-              className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition text-sm w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs px-5 py-3 rounded-xl transition shadow-sm w-full sm:w-auto"
             >
-              {showForm ? 'Cancel' : '+ Add Listing'}
+              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              <span>{showForm ? 'Cancel Editor' : 'Create Listing'}</span>
             </button>
           )}
         </div>
 
         {errorMsg && (
-          <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
-            {errorMsg}
+          <div className="flex items-center gap-2 p-4 rounded-2xl bg-red-50 border border-red-200/80 text-red-700 text-xs mb-6 font-medium">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Add / Edit Listing Form */}
+        {/* Form Modal / Card */}
         {showForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6 mb-8">
-            <h2 className="font-semibold text-gray-800 mb-5">
-              {editingId ? 'Edit Property Listing' : 'Create New Listing'}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Title *</label>
-                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="e.g. Spacious Luxury PG in Sector 62" required />
-              </div>
-              <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition resize-none"
-                  rows={3} placeholder="Describe amenities, location highlights..." />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Type *</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition bg-white">
-                  <option value="PG">PG</option>
-                  <option value="flat">Flat</option>
-                  <option value="room">Room</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Gender *</label>
-                <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition bg-white">
-                  <option value="any">Any</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Rent (Rs/month) *</label>
-                <input type="number" value={form.rent} onChange={(e) => setForm({ ...form, rent: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="8000" min="0" required />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Security Deposit (Rs)</label>
-                <input type="number" value={form.deposit} onChange={(e) => setForm({ ...form, deposit: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="16000" min="0" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Furnishing</label>
-                <select value={form.furnishing} onChange={(e) => setForm({ ...form, furnishing: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition bg-white">
-                  <option value="furnished">Furnished</option>
-                  <option value="semi-furnished">Semi-Furnished</option>
-                  <option value="unfurnished">Unfurnished</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">City *</label>
-                <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="Noida" required />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">State</label>
-                <input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="Uttar Pradesh" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Street / Area</label>
-                <input value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="Block A, Sector 62" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Pincode</label>
-                <input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="201301" />
-              </div>
-              <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Amenities (comma separated)</label>
-                <input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="WiFi, AC, Meals, Laundry, Power Backup" />
-              </div>
-              <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Upload New Images (Max 5)</label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => setImageFiles(Array.from(e.target.files))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                />
-                {imageFiles.length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1">{imageFiles.length} image(s) selected</p>
-                )}
-              </div>
-            </div>
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={handleSubmit}
-                disabled={uploading}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
-              >
-                {uploading ? 'Uploading images...' : editingId ? 'Update Listing' : 'Publish Listing'}
-              </button>
+          <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-md p-6 sm:p-8 mb-8">
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-zinc-100">
+              <h2 className="font-bold text-base text-zinc-900">
+                {editingId ? 'Edit Property Specification' : 'Add Property Listing'}
+              </h2>
               <button
                 onClick={() => { setShowForm(false); setEditingId(null); setForm(initialForm); }}
-                className="border border-gray-200 text-gray-600 px-5 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                className="text-zinc-400 hover:text-zinc-700"
               >
-                Cancel
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Title *</label>
+                  <input
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-400 transition"
+                    placeholder="e.g., Executive 2BHK PG near Cyber City"
+                    required
+                  />
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Description</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-400 transition resize-none"
+                    rows={3}
+                    placeholder="Detail building security, meals, power backup, distance to metro..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Property Type *</label>
+                  <select
+                    value={form.type}
+                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white"
+                  >
+                    <option value="PG">PG</option>
+                    <option value="flat">Flat</option>
+                    <option value="room">Private Room</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Gender Restriction *</label>
+                  <select
+                    value={form.gender}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white"
+                  >
+                    <option value="any">Unisex / Any</option>
+                    <option value="male">Male Only</option>
+                    <option value="female">Female Only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Monthly Rent (Rs) *</label>
+                  <input
+                    type="number"
+                    value={form.rent}
+                    onChange={(e) => setForm({ ...form, rent: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-400"
+                    placeholder="8000"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Security Deposit (Rs)</label>
+                  <input
+                    type="number"
+                    value={form.deposit}
+                    onChange={(e) => setForm({ ...form, deposit: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-400"
+                    placeholder="16000"
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Furnishing Status</label>
+                  <select
+                    value={form.furnishing}
+                    onChange={(e) => setForm({ ...form, furnishing: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white"
+                  >
+                    <option value="furnished">Furnished</option>
+                    <option value="semi-furnished">Semi-Furnished</option>
+                    <option value="unfurnished">Unfurnished</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">City *</label>
+                  <input
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-400"
+                    placeholder="Noida"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">State</label>
+                  <input
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900"
+                    placeholder="Uttar Pradesh"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Street Address</label>
+                  <input
+                    value={form.street}
+                    onChange={(e) => setForm({ ...form, street: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900"
+                    placeholder="Sector 62, Block A"
+                  />
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Amenities (Comma-separated)</label>
+                  <input
+                    value={form.amenities}
+                    onChange={(e) => setForm({ ...form, amenities: e.target.value })}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900"
+                    placeholder="High-Speed WiFi, AC, Three Meals, Laundry, Power Backup"
+                  />
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-zinc-600 block mb-1">Upload Photographs (Max 5)</label>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => setImageFiles(Array.from(e.target.files))}
+                    className="w-full bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2 text-xs text-zinc-700"
+                  />
+                  {imageFiles.length > 0 && (
+                    <span className="text-[11px] text-zinc-500 mt-1 block font-medium">
+                      {imageFiles.length} file(s) queued for upload
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs px-6 py-3 rounded-xl transition disabled:opacity-50"
+                >
+                  {uploading ? 'Processing Image Pipeline...' : editingId ? 'Update Listing' : 'Publish Property'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowForm(false); setEditingId(null); setForm(initialForm); }}
+                  className="text-zinc-600 hover:bg-zinc-100 font-semibold text-xs px-4 py-3 rounded-xl transition border border-zinc-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
-        {/* Stats */}
+        {/* Metrics Row */}
         {user?.role === 'owner' ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-              <p className="text-3xl font-bold text-blue-600">{listings.length}</p>
-              <p className="text-gray-500 text-sm mt-1">Total Properties</p>
+            <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-900 flex-shrink-0">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-zinc-900">{listings.length}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Properties</p>
+              </div>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-              <p className="text-3xl font-bold text-green-600">{listings.filter((l) => l.isAvailable).length}</p>
-              <p className="text-gray-500 text-sm mt-1">Available Now</p>
+
+            <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-emerald-600">
+                  {listings.filter((l) => l.isAvailable).length}
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Available For Rent</p>
+              </div>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-              <p className="text-3xl font-bold text-indigo-600">{inquiries.length}</p>
-              <p className="text-gray-500 text-sm mt-1">Active Inquiries</p>
+
+            <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-blue-600">{inquiries.length}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Inquiries Received</p>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
-            <h2 className="font-semibold text-gray-800">My Sent Inquiries ({inquiries.length})</h2>
+          <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-sm mb-8">
+            <h2 className="text-base font-bold text-zinc-900">Tenant Inquiries Log ({inquiries.length})</h2>
           </div>
         )}
 
-        {/* Owner Listings View */}
+        {/* Owner Properties Table */}
         {user?.role === 'owner' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-semibold text-gray-800">My Listings</h2>
+          <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-sm overflow-hidden mb-8">
+            <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-base text-zinc-900">Managed Inventory</h2>
+                <p className="text-zinc-400 text-xs mt-0.5">Live status and performance of your property listings</p>
+              </div>
             </div>
-            {listings.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">No listings yet. Click "+ Add Listing" to create your first listing.</div>
-            ) : (
-              <>
-                {/* Desktop Table */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                      <tr>
-                        <th className="text-left px-5 py-3">Title</th>
-                        <th className="text-left px-5 py-3">City</th>
-                        <th className="text-left px-5 py-3">Rent</th>
-                        <th className="text-left px-5 py-3">Type</th>
-                        <th className="text-left px-5 py-3">Status</th>
-                        <th className="text-left px-5 py-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {listings.map((listing) => (
-                        <tr key={listing._id} className="hover:bg-gray-50 transition">
-                          <td className="px-5 py-4 text-sm font-medium text-gray-800">
-                            <span onClick={() => navigate('/listings/' + listing._id)} className="cursor-pointer hover:text-blue-600">
-                              {listing.title}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 text-sm text-gray-500">{listing.address?.city}</td>
-                          <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
-                          <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
-                          <td className="px-5 py-4">
-                            <button
-                              onClick={() => handleToggleAvailability(listing)}
-                              title="Click to toggle availability"
-                              className={"text-xs font-medium px-3 py-1 rounded-full cursor-pointer transition " + (listing.isAvailable ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-red-50 text-red-500 hover:bg-red-100')}
-                            >
-                              {listing.isAvailable ? '✓ Available' : '✗ Unavailable'}
-                            </button>
-                          </td>
-                          <td className="px-5 py-4">
-                            <div className="flex items-center gap-3">
-                              <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 hover:underline">Inquiries</button>
-                              <button onClick={() => startEdit(listing)} className="text-xs text-gray-600 hover:text-blue-600">Edit</button>
-                              <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 hover:underline">Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
 
-                {/* Mobile Cards */}
-                <div className="md:hidden divide-y divide-gray-100">
-                  {listings.map((listing) => (
-                    <div key={listing._id} className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <p onClick={() => navigate('/listings/' + listing._id)} className="text-sm font-semibold text-gray-800 flex-1 pr-2 cursor-pointer">
-                          {listing.title}
-                        </p>
-                        <button
-                          onClick={() => handleToggleAvailability(listing)}
-                          className={"text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}
-                        >
-                          {listing.isAvailable ? 'Available' : 'Unavailable'}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-1">{listing.address?.city} · {listing.type}</p>
-                      <p className="text-sm text-blue-600 font-medium mb-3">Rs {listing.rent?.toLocaleString()}/mo</p>
-                      <div className="flex gap-3">
-                        <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 font-medium hover:underline">View Inquiries</button>
-                        <button onClick={() => startEdit(listing)} className="text-xs text-gray-600 font-medium">Edit</button>
-                        <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 font-medium hover:underline">Delete</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+            {listings.length === 0 ? (
+              <div className="p-12 text-center text-zinc-400 text-xs">
+                No active properties registered. Click "+ Create Listing" to begin.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-50/80 text-zinc-400 uppercase tracking-wider border-b border-zinc-100">
+                    <tr>
+                      <th className="px-6 py-3.5 font-bold">Property Title</th>
+                      <th className="px-6 py-3.5 font-bold">City</th>
+                      <th className="px-6 py-3.5 font-bold">Monthly Rent</th>
+                      <th className="px-6 py-3.5 font-bold">Category</th>
+                      <th className="px-6 py-3.5 font-bold">Availability Status</th>
+                      <th className="px-6 py-3.5 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 text-zinc-700">
+                    {listings.map((l) => (
+                      <tr key={l._id} className="hover:bg-zinc-50/50 transition">
+                        <td className="px-6 py-4 font-bold text-zinc-900">
+                          <span
+                            onClick={() => navigate('/listings/' + l._id)}
+                            className="cursor-pointer hover:text-blue-600 transition inline-flex items-center gap-1.5"
+                          >
+                            <span>{l.title}</span>
+                            <ExternalLink className="w-3 h-3 text-zinc-400" />
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-zinc-500">{l.address?.city}</td>
+                        <td className="px-6 py-4 font-bold text-zinc-900">Rs {l.rent?.toLocaleString()}</td>
+                        <td className="px-6 py-4">
+                          <span className="bg-zinc-100 text-zinc-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                            {l.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleToggleAvailability(l)}
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full transition ${
+                              l.isAvailable
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100'
+                                : 'bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${l.isAvailable ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                            <span>{l.isAvailable ? 'Available' : 'Occupied'}</span>
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => { fetchInquiries(l._id); }}
+                              className="p-1.5 text-zinc-400 hover:text-blue-600 transition"
+                              title="Inspect Inquiries"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => startEdit(l)}
+                              className="p-1.5 text-zinc-400 hover:text-zinc-900 transition"
+                              title="Edit Listing"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(l._id)}
+                              className="p-1.5 text-zinc-400 hover:text-red-600 transition"
+                              title="Delete Listing"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
 
-        {/* Inquiries Section */}
+        {/* Inquiries Stream */}
         {inquiries.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mt-6">
-            <div className="p-5 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-800">
-                {user?.role === 'owner' ? 'Listing Inquiries' : 'Inquiries You Sent'}
+          <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-zinc-100">
+              <h2 className="font-bold text-base text-zinc-900">
+                {user?.role === 'owner' ? 'Prospective Tenant Messages' : 'Your Inquiries'}
               </h2>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-zinc-100">
               {inquiries.map((inq) => (
-                <div key={inq._id} className="px-4 md:px-5 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
+                <div key={inq._id} className="p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-4 h-4 text-zinc-400" />
+                      <span className="font-bold text-sm text-zinc-900">
                         {inq.tenant?.name || inq.listing?.title}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1 break-words">{inq.message}</p>
-                      {inq.tenant && (
-                        <p className="text-xs text-gray-400 mt-1">{inq.tenant.email} · {inq.tenant.phone}</p>
-                      )}
+                      </span>
                     </div>
-                    <span className={"text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap " + (
-                      inq.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :
-                      inq.status === 'responded' ? 'bg-green-50 text-green-600' :
-                      'bg-gray-50 text-gray-500'
-                    )}>
-                      {inq.status}
-                    </span>
+
+                    <p className="text-xs sm:text-sm text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-xl p-3 my-2 leading-relaxed">
+                      "{inq.message}"
+                    </p>
+
+                    {inq.tenant && (
+                      <div className="flex items-center gap-4 text-xs text-zinc-400 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>{inq.tenant.email}</span>
+                        </span>
+                        {inq.tenant.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>{inq.tenant.phone}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  <span className={`self-start text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${
+                    inq.status === 'pending'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                  }`}>
+                    {inq.status}
+                  </span>
                 </div>
               ))}
             </div>

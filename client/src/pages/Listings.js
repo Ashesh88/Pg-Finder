@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, MapPin, SlidersHorizontal, X, ArrowUpRight } from 'lucide-react';
 import API from '../api';
 
 const Listings = () => {
@@ -38,158 +39,266 @@ const Listings = () => {
     navigate('/listings');
   };
 
+  const hasActiveFilters = Object.values(filters).some(Boolean);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">Browse Listings</h1>
-            {/* Mobile filter toggle */}
+    <div className="min-h-screen bg-zinc-50/60 pb-20">
+      {/* Header & Filter Bar */}
+      <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 lg:px-8 py-6 sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">Explore Properties</h1>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">Verified homes, PGs, and apartments with transparent rental terms</p>
+            </div>
+            
+            {/* Mobile Filter Toggle Button */}
             <button
-              className="md:hidden text-sm text-blue-600 font-medium border border-blue-200 px-3 py-1.5 rounded-lg"
               onClick={() => setShowFilters(!showFilters)}
+              className="md:hidden inline-flex items-center gap-2 self-start px-3.5 py-2 rounded-xl text-xs font-semibold border border-zinc-200 bg-zinc-50 text-zinc-700"
             >
-              {showFilters ? 'Hide Filters' : 'Filters'}
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{showFilters ? 'Hide Filters' : 'Filter Search'}</span>
             </button>
           </div>
 
-          {/* Desktop filters — always visible */}
-          <div className="hidden md:flex gap-3 flex-wrap">
-            <input
-              type="text"
-              placeholder="City"
-              value={filters.city}
-              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition"
-            />
-            <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition bg-white">
+          {/* Desktop Filter Row */}
+          <div className="hidden md:flex items-center gap-3 flex-wrap pt-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search by city..."
+                value={filters.city}
+                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                className="w-full bg-zinc-50/70 border border-zinc-200/80 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-zinc-800 outline-none focus:bg-white focus:border-zinc-400 transition"
+              />
+            </div>
+
+            <select
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              className="bg-zinc-50/70 border border-zinc-200/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-700 outline-none focus:bg-white focus:border-zinc-400 transition"
+            >
               <option value="">All Types</option>
               <option value="PG">PG</option>
               <option value="flat">Flat</option>
               <option value="room">Room</option>
             </select>
-            <select value={filters.gender} onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition bg-white">
-              <option value="">Any Gender</option>
+
+            <select
+              value={filters.gender}
+              onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+              className="bg-zinc-50/70 border border-zinc-200/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-700 outline-none focus:bg-white focus:border-zinc-400 transition"
+            >
+              <option value="">All Genders</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
-              <option value="any">Any</option>
+              <option value="any">Unisex / Any</option>
             </select>
-            <select value={filters.furnishing} onChange={(e) => setFilters({ ...filters, furnishing: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition bg-white">
+
+            <select
+              value={filters.furnishing}
+              onChange={(e) => setFilters({ ...filters, furnishing: e.target.value })}
+              className="bg-zinc-50/70 border border-zinc-200/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-700 outline-none focus:bg-white focus:border-zinc-400 transition"
+            >
               <option value="">Furnishing</option>
               <option value="furnished">Furnished</option>
               <option value="semi-furnished">Semi-Furnished</option>
               <option value="unfurnished">Unfurnished</option>
             </select>
-            <input type="number" placeholder="Min Rent" value={filters.minRent}
+
+            <input
+              type="number"
+              placeholder="Min Rent"
+              value={filters.minRent}
               onChange={(e) => setFilters({ ...filters, minRent: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition w-28" />
-            <input type="number" placeholder="Max Rent" value={filters.maxRent}
+              className="w-28 bg-zinc-50/70 border border-zinc-200/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-700 outline-none focus:bg-white focus:border-zinc-400 transition"
+            />
+
+            <input
+              type="number"
+              placeholder="Max Rent"
+              value={filters.maxRent}
               onChange={(e) => setFilters({ ...filters, maxRent: e.target.value })}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition w-28" />
-            <button onClick={clearFilters} className="text-sm text-gray-500 hover:text-red-500 transition px-2">Clear</button>
+              className="w-28 bg-zinc-50/70 border border-zinc-200/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-700 outline-none focus:bg-white focus:border-zinc-400 transition"
+            />
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs font-semibold text-zinc-500 hover:text-red-600 transition flex items-center gap-1 px-2 py-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
 
-          {/* Mobile filters — collapsible */}
+          {/* Mobile Filter Drawer */}
           {showFilters && (
-            <div className="md:hidden flex flex-col gap-3 mt-3">
+            <div className="md:hidden flex flex-col gap-3 mt-4 pt-4 border-t border-zinc-100">
               <input
                 type="text"
-                placeholder="City"
+                placeholder="City..."
                 value={filters.city}
                 onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition w-full"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm"
               />
-              <div className="grid grid-cols-2 gap-3">
-                <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition bg-white">
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={filters.type}
+                  onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                  className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs"
+                >
                   <option value="">All Types</option>
                   <option value="PG">PG</option>
                   <option value="flat">Flat</option>
                   <option value="room">Room</option>
                 </select>
-                <select value={filters.gender} onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition bg-white">
+
+                <select
+                  value={filters.gender}
+                  onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+                  className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs"
+                >
                   <option value="">Any Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                  <option value="any">Any</option>
+                  <option value="any">Unisex</option>
                 </select>
-                <select value={filters.furnishing} onChange={(e) => setFilters({ ...filters, furnishing: e.target.value })}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition bg-white">
-                  <option value="">Furnishing</option>
-                  <option value="furnished">Furnished</option>
-                  <option value="semi-furnished">Semi-Furnished</option>
-                  <option value="unfurnished">Unfurnished</option>
-                </select>
-                <input type="number" placeholder="Min Rent" value={filters.minRent}
-                  onChange={(e) => setFilters({ ...filters, minRent: e.target.value })}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition" />
-                <input type="number" placeholder="Max Rent" value={filters.maxRent}
-                  onChange={(e) => setFilters({ ...filters, maxRent: e.target.value })}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition" />
               </div>
-              <button onClick={clearFilters} className="text-sm text-red-500 font-medium text-left px-1">Clear Filters</button>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  placeholder="Min Rent"
+                  value={filters.minRent}
+                  onChange={(e) => setFilters({ ...filters, minRent: e.target.value })}
+                  className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs"
+                />
+                <input
+                  type="number"
+                  placeholder="Max Rent"
+                  value={filters.maxRent}
+                  onChange={(e) => setFilters({ ...filters, maxRent: e.target.value })}
+                  className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs"
+                />
+              </div>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs font-semibold text-red-600 text-left py-1">
+                  Clear All Filters
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      {/* Listings Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {loading ? (
-          <div className="text-center py-20 text-gray-400">Loading listings...</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} className="bg-white border border-zinc-200 rounded-2xl h-80" />
+            ))}
+          </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">No listings found. Try different filters.</div>
+          <div className="bg-white border border-zinc-200 rounded-3xl p-16 text-center max-w-md mx-auto my-12">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-400 mx-auto mb-4">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-zinc-900 mb-1">No properties found</h3>
+            <p className="text-zinc-500 text-xs leading-relaxed mb-6">
+              We couldn't find listings matching your filter criteria. Try adjusting the city or rent range.
+            </p>
+            <button
+              onClick={clearFilters}
+              className="text-xs font-semibold text-zinc-900 bg-zinc-100 hover:bg-zinc-200 px-4 py-2.5 rounded-xl transition"
+            >
+              Reset Filters
+            </button>
+          </div>
         ) : (
           <>
-            <p className="text-sm text-gray-500 mb-6">{listings.length} listings found</p>
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                {listings.length} {listings.length === 1 ? 'property' : 'properties'} available
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((listing) => (
+              {listings.map((item) => (
                 <div
-                  key={listing._id}
-                  onClick={() => navigate('/listings/' + listing._id)}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden"
+                  key={item._id}
+                  onClick={() => navigate('/listings/' + item._id)}
+                  className="group bg-white rounded-2xl border border-zinc-200/80 hover:border-zinc-300 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden flex flex-col"
                 >
-                  <div className="relative">
+                  {/* Photo Container */}
+                  <div className="relative aspect-[16/10] overflow-hidden bg-zinc-100">
                     <img
-                      src={listing.images?.[0] || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&auto=format&fit=crop'}
-                      alt={listing.title}
-                      className="w-full h-48 object-cover"
+                      src={item.images?.[0] || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop'}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-white text-blue-600 text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-                        {listing.type}
+
+                    {/* Floating Badges */}
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      <span className="bg-zinc-900/85 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg">
+                        {item.type}
+                      </span>
+                      <span className="bg-white/90 backdrop-blur-md text-zinc-800 text-[11px] font-semibold px-2.5 py-1 rounded-lg">
+                        {item.gender === 'any' ? 'Unisex' : item.gender}
                       </span>
                     </div>
-                    <div className="absolute top-3 right-3">
-                      <span className={"text-xs font-semibold px-3 py-1 rounded-full shadow-sm " + (
-                        listing.gender === 'male' ? 'bg-blue-100 text-blue-700' :
-                        listing.gender === 'female' ? 'bg-pink-100 text-pink-700' :
-                        'bg-green-100 text-green-700'
-                      )}>
-                        {listing.gender}
+
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="w-8 h-8 rounded-full bg-white text-zinc-900 shadow-md flex items-center justify-center">
+                        <ArrowUpRight className="w-4 h-4" />
                       </span>
                     </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-semibold text-gray-800 mb-1 truncate">{listing.title}</h3>
-                    <p className="text-gray-500 text-sm mb-3">{listing.address?.city}, {listing.address?.state}</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-blue-600 font-bold text-lg">Rs {listing.rent?.toLocaleString()}</span>
-                        <span className="text-gray-400 text-xs">/month</span>
+
+                  {/* Body Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <h3 className="font-bold text-zinc-900 text-base leading-snug group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {item.title}
+                        </h3>
                       </div>
-                      <span className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{listing.furnishing}</span>
+
+                      <div className="flex items-center gap-1.5 text-zinc-500 text-xs mb-4">
+                        <MapPin className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+                        <span className="truncate">{item.address?.city}, {item.address?.state}</span>
+                      </div>
+
+                      {item.amenities?.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap mb-4">
+                          {item.amenities.slice(0, 3).map((a) => (
+                            <span key={a} className="text-[11px] font-medium bg-zinc-50 text-zinc-600 border border-zinc-200/60 px-2.5 py-0.5 rounded-md">
+                              {a}
+                            </span>
+                          ))}
+                          {item.amenities.length > 3 && (
+                            <span className="text-[11px] font-medium text-zinc-400 px-1 py-0.5">
+                              +{item.amenities.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {listing.amenities?.length > 0 && (
-                      <div className="mt-3 flex gap-2 flex-wrap">
-                        {listing.amenities.slice(0, 3).map((a) => (
-                          <span key={a} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">{a}</span>
-                        ))}
+
+                    <div className="pt-3 border-t border-zinc-100 flex items-baseline justify-between">
+                      <div>
+                        <span className="text-lg font-extrabold text-zinc-900">
+                          Rs {item.rent?.toLocaleString()}
+                        </span>
+                        <span className="text-zinc-400 text-xs ml-1 font-medium">/ month</span>
                       </div>
-                    )}
+                      <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                        {item.furnishing}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}

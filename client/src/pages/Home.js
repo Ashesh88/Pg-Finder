@@ -1,184 +1,168 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, ShieldCheck, Zap, HandCoins, ArrowRight } from 'lucide-react';
 
 const stats = [
-  { label: 'Active Listings', value: '2,400+' },
-  { label: 'Cities Covered', value: '8' },
-  { label: 'Happy Tenants', value: '10,000+' },
+  { label: 'Active Verified Listings', value: '2,400+' },
+  { label: 'Metro Hubs Covered', value: '8 Cities' },
+  { label: 'Verified Tenants Placed', value: '10,000+' },
+  { label: 'Brokerage Fee', value: '0%' },
 ];
 
 const features = [
   {
-    icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png',
-    title: 'Verified Listings',
-    desc: 'Every listing goes through a manual verification process before going live.',
+    icon: ShieldCheck,
+    title: '100% Verified Properties',
+    desc: 'Every PG, flat, and co-living room is audited on-site for security, hygiene, and amenities.',
   },
   {
-    icon: 'https://cdn-icons-png.flaticon.com/512/2489/2489756.png',
-    title: 'Zero Brokerage',
-    desc: 'Connect directly with property owners. No middlemen, no hidden charges.',
+    icon: HandCoins,
+    title: 'Zero Brokerage Policy',
+    desc: 'Connect directly with verified property owners. Eliminate intermediate agent commissions permanently.',
   },
   {
-    icon: 'https://cdn-icons-png.flaticon.com/512/1380/1380338.png',
-    title: 'Instant Inquiry',
-    desc: 'Send inquiries to owners and get responses within hours, not days.',
+    icon: Zap,
+    title: 'Direct Instant Inquiries',
+    desc: 'Send inquiries directly to owners with live tracking and expedited response SLAs.',
   },
 ];
 
-const cities = ['Noida', 'Gurgaon', 'Bangalore', 'Pune', 'Hyderabad', 'Mumbai'];
+const popularCities = ['Noida', 'Gurgaon', 'Bangalore', 'Pune', 'Hyderabad', 'Mumbai'];
 
 const Home = () => {
   const navigate = useNavigate();
   const [searchCity, setSearchCity] = useState('');
 
+  const handleSearch = (e) => {
+    e?.preventDefault();
+    if (searchCity.trim()) {
+      navigate('/listings?city=' + encodeURIComponent(searchCity.trim()));
+    } else {
+      navigate('/listings');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-zinc-50/50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-zinc-950 text-white">
+        {/* Subtle Ambient Glow */}
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Hero */}
-      <div className="relative text-white">
-        <img
-          src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1600&auto=format&fit=crop"
-          alt="hero"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/85 to-indigo-900/75" />
-        <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32">
-          <p className="text-blue-200 text-sm font-medium uppercase tracking-widest mb-4">
-            India's Fastest Growing Rental Platform
-          </p>
-          <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
-            Find Verified PGs & Flats <br />
-            <span className="text-yellow-300">Near You. Instantly.</span>
-          </h1>
-          <p className="text-blue-100 text-base md:text-lg mb-10 max-w-xl">
-            No brokerage. No fake listings. Just real homes, real owners, and a seamless renting experience.
-          </p>
-
-          {/* Search */}
-          <div className="bg-white rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-2xl shadow-2xl">
-            <input
-              type="text"
-              value={searchCity}
-              onChange={(e) => setSearchCity(e.target.value)}
-              placeholder="Search by city — Noida, Gurgaon..."
-              className="flex-1 px-4 py-3 text-gray-700 outline-none rounded-xl text-sm"
-            />
-            <button
-              onClick={() => navigate('/listings?city=' + searchCity)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm"
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Popular Cities */}
-          <div className="mt-6 flex items-center gap-3 flex-wrap">
-            <span className="text-blue-300 text-sm">Popular:</span>
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => navigate('/listings?city=' + city)}
-                className="bg-white/10 hover:bg-white/20 text-white text-sm px-4 py-1.5 rounded-full transition"
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          {stats.map((stat) => (
-            <div key={stat.label}>
-              <p className="text-4xl font-bold text-blue-600">{stat.value}</p>
-              <p className="text-gray-500 mt-1 text-sm">{stat.label}</p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 md:pt-32 md:pb-40">
+          <div className="max-w-3xl">
+            {/* Pill Tag */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/80 text-zinc-300 text-xs font-medium mb-6">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Direct Rental Marketplace across India</span>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Features */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-20">
-        <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest text-center mb-3">
-          Why PGFinder
-        </p>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-12 text-center">
-          Renting made simple, transparent & fast
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition"
-            >
-              <img src={f.icon} alt={f.title} className="w-10 h-10 mb-5" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">{f.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
+              Find verified PGs & flats,{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-400">
+                without the broker.
+              </span>
+            </h1>
 
-      {/* How it works */}
-      <div className="bg-gray-50 py-20">
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest text-center mb-3">
-            How It Works
-          </p>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-12 text-center">
-            Get into your new home in 3 steps
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: 'Search', desc: 'Browse thousands of verified listings filtered by city, budget, and preferences.' },
-              { step: '02', title: 'Inquire', desc: 'Send a direct inquiry to the owner. No broker involved, no commission.' },
-              { step: '03', title: 'Move In', desc: 'Visit the property, finalize the deal, and move in on your schedule.' },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="text-5xl font-bold text-blue-100 mb-4">{item.step}</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+            <p className="text-base sm:text-lg text-zinc-400 leading-relaxed mb-10 max-w-2xl">
+              Transparent rental housing built for modern professionals and students. Connect directly with authentic property owners across India.
+            </p>
+
+            {/* Floating Search Bar */}
+            <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-xl border border-white/15 p-2 rounded-2xl max-w-2xl shadow-2xl flex flex-col sm:flex-row gap-2">
+              <div className="flex-1 flex items-center gap-3 px-4 py-2.5">
+                <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchCity}
+                  onChange={(e) => setSearchCity(e.target.value)}
+                  placeholder="Enter city or locality (e.g., Noida, Sector 62)..."
+                  className="w-full bg-transparent text-white placeholder-zinc-400 text-sm outline-none"
+                />
               </div>
-            ))}
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm px-7 py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25"
+              >
+                <Search className="w-4 h-4" />
+                <span>Search</span>
+              </button>
+            </form>
+
+            {/* Quick Cities Chips */}
+            <div className="mt-8 flex items-center gap-2 flex-wrap">
+              <span className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mr-1">Popular:</span>
+              {popularCities.map((city) => (
+                <button
+                  key={city}
+                  onClick={() => navigate('/listings?city=' + city)}
+                  className="text-xs font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:text-white px-3 py-1.5 rounded-lg transition"
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="relative text-white text-center py-24">
-        <img
-          src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1600&auto=format&fit=crop"
-          alt="cta"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-blue-900/80" />
-        <div className="relative px-4">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to find your perfect home?</h2>
-          <p className="text-blue-100 mb-8 max-w-md mx-auto text-sm md:text-base">
-            Join thousands of tenants who found their ideal PG or flat through PGFinder.
-          </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-            <button
-              onClick={() => navigate('/listings')}
-              className="w-full md:w-auto bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition"
-            >
-              Browse Listings
-            </button>
-            <button
-              onClick={() => navigate('/register')}
-              className="w-full md:w-auto border border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
-            >
-              Create Account
-            </button>
-          </div>
+      {/* Metrics Row */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-sm">
+              <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 mb-1">{s.value}</div>
+              <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-100 py-8 text-center text-gray-400 text-sm">
-        2026 PGFinder. Built by <span className="text-blue-500 font-medium">Ashesh Singh</span>. All rights reserved.
+      {/* Value Pillars */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <h2 className="text-xs uppercase tracking-widest font-bold text-blue-600 mb-3">Enterprise Standard Living</h2>
+          <p className="text-3xl font-bold tracking-tight text-zinc-900">Engineered for seamless tenant discovery</p>
+          <p className="text-zinc-500 text-sm mt-3">We eliminate traditional brokerage friction with end-to-end transparency and verified listings.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {features.map((feat) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={feat.title}
+                className="bg-white border border-zinc-200/80 rounded-3xl p-8 hover:border-zinc-300 hover:shadow-lg transition-all duration-200 group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-900 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-zinc-900 mb-2">{feat.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">{feat.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 text-white p-8 sm:p-14 border border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-xl">
+            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">Are you a property owner?</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              List your PG, flat, or room to reach thousands of verified tenants daily with real-time inquiry management and zero listing fee.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/register')}
+            className="flex-shrink-0 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold px-6 py-3.5 rounded-xl transition flex items-center gap-2 text-sm shadow-md"
+          >
+            <span>List Your Property</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
