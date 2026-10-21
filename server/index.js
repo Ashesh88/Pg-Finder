@@ -9,20 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
-
-const listingRoutes = require('./routes/listingRoutes');
-app.use('/api/listings', listingRoutes);
-
-const inquiryRoutes = require('./routes/inquiryRoutes');
-app.use('/api/inquiries', inquiryRoutes);
-
-const reviewRoutes = require('./routes/reviewRoutes');
-app.use('/api/reviews', reviewRoutes);
-
-// Healthcheck & Diagnostic Route
+// Healthcheck & Diagnostic Route (Always available)
 app.get('/', (req, res) => {
   const dbStatus = ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown';
   res.json({
@@ -41,14 +28,36 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Guard: If MongoDB is disconnected, return immediate 503 instead of hanging 10,000ms
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: 'Database connection failed: MongoDB Atlas cluster is either paused or password in MONGO_URI is incorrect. Please check MongoDB Atlas.',
+    });
+  }
+  next();
+});
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
+const listingRoutes = require('./routes/listingRoutes');
+app.use('/api/listings', listingRoutes);
+
+const inquiryRoutes = require('./routes/inquiryRoutes');
+app.use('/api/inquiries', inquiryRoutes);
+
+const reviewRoutes = require('./routes/reviewRoutes');
+app.use('/api/reviews', reviewRoutes);
+
 const PORT = process.env.PORT || 5000;
 
-// Start Express server immediately so backend is always accessible
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// Connect to MongoDB with graceful error reporting
+// Connect to MongoDB
 const connectDB = async () => {
   if (!process.env.MONGO_URI) {
     console.error('[Error] MONGO_URI is missing in server/.env');
@@ -56,17 +65,18 @@ const connectDB = async () => {
   }
 
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log('[Database] MongoDB Atlas connected successfully.');
   } catch (err) {
     console.error('\n[Database Connection Error]');
     if (err.message && err.message.includes('authentication failed')) {
       console.error('>> Bad Auth: Database username or password in MONGO_URI is incorrect.');
-      console.error('>> Check your MongoDB Atlas Dashboard -> Database Access -> Users & reset password.');
+      console.error('>> Check MongoDB Atlas -> Database Access -> Edit user password.');
     } else {
       console.error('>> ' + err.message);
     }
-    console.error('>> Server is still listening on port ' + PORT + ' for API requests.\n');
   }
 };
 
