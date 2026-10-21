@@ -11,14 +11,18 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('listings');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  const initialForm = {
     title: '', description: '', type: 'PG', gender: 'any',
     rent: '', deposit: '', furnishing: 'unfurnished',
     city: '', state: '', street: '', pincode: '',
     amenities: '',
-  });
+  };
+  const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
     if (!user) return navigate('/login');
@@ -27,12 +31,20 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setErrorMsg('');
     try {
-      const { data } = await API.get('/listings');
-      const myListings = data.filter((l) => l.owner._id === user.id);
-      setListings(myListings);
+      if (user?.role === 'owner') {
+        // Optimized: Fetch owner's listings directly from server
+        const { data } = await API.get('/listings/my');
+        setListings(data);
+      } else {
+        // Tenant dashboard: Fetch tenant's inquiries
+        const { data } = await API.get('/inquiries/my');
+        setInquiries(data);
+      }
     } catch (err) {
       console.error(err);
+      setErrorMsg('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -65,24 +77,71 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
+    if (!form.title || !form.rent || !form.city) {
+      alert('Please fill in Title, Rent, and City');
+      return;
+    }
     try {
-      const imageUrls = await uploadImages();
-      await API.post('/listings', {
+      const uploadedUrls = await uploadImages();
+      const payload = {
         title: form.title,
         description: form.description,
         type: form.type,
         gender: form.gender,
         rent: Number(form.rent),
-        deposit: Number(form.deposit),
+        deposit: Number(form.deposit || 0),
         furnishing: form.furnishing,
         address: { street: form.street, city: form.city, state: form.state, pincode: form.pincode },
-        amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
-        images: imageUrls,
-      });
+        amenities: form.amenities ? form.amenities.split(',').map((a) => a.trim()).filter(Boolean) : [],
+      };
+
+      if (editingId) {
+        // Edit Mode
+        if (uploadedUrls.length > 0) {
+          payload.images = uploadedUrls;
+        }
+        await API.put('/listings/' + editingId, payload);
+      } else {
+        // Create Mode
+        payload.images = uploadedUrls;
+        await API.post('/listings', payload);
+      }
+
       setShowForm(false);
+      setEditingId(null);
       setImageFiles([]);
-      setForm({ title: '', description: '', type: 'PG', gender: 'any', rent: '', deposit: '', furnishing: 'unfurnished', city: '', state: '', street: '', pincode: '', amenities: '' });
+      setForm(initialForm);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Error saving listing');
+    }
+  };
+
+  const startEdit = (listing) => {
+    setEditingId(listing._id);
+    setForm({
+      title: listing.title || '',
+      description: listing.description || '',
+      type: listing.type || 'PG',
+      gender: listing.gender || 'any',
+      rent: listing.rent || '',
+      deposit: listing.deposit || '',
+      furnishing: listing.furnishing || 'unfurnished',
+      city: listing.address?.city || '',
+      state: listing.address?.state || '',
+      street: listing.address?.street || '',
+      pincode: listing.address?.pincode || '',
+      amenities: listing.amenities?.join(', ') || '',
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleAvailability = async (listing) => {
+    try {
+      await API.put('/listings/' + listing._id, { isAvailable: !listing.isAvailable });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -90,7 +149,7 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this listing?')) return;
+    if (!window.confirm('Are you sure you want to delete this listing?')) return;
     try {
       await API.delete('/listings/' + id);
       fetchData();
@@ -99,7 +158,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -109,11 +168,21 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">Welcome back, {user?.name}</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Welcome back, <span className="font-semibold text-gray-700">{user?.name || 'User'}</span> ({user?.role})
+            </p>
           </div>
           {user?.role === 'owner' && (
             <button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => {
+                if (showForm) {
+                  setShowForm(false);
+                  setEditingId(null);
+                  setForm(initialForm);
+                } else {
+                  setShowForm(true);
+                }
+              }}
               className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition text-sm w-full sm:w-auto"
             >
               {showForm ? 'Cancel' : '+ Add Listing'}
@@ -121,25 +190,33 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Add Listing Form */}
+        {errorMsg && (
+          <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Add / Edit Listing Form */}
         {showForm && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6 mb-8">
-            <h2 className="font-semibold text-gray-800 mb-5">New Listing</h2>
+            <h2 className="font-semibold text-gray-800 mb-5">
+              {editingId ? 'Edit Property Listing' : 'Create New Listing'}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Title</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Title *</label>
                 <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="Spacious PG in Sector 62" />
+                  placeholder="e.g. Spacious Luxury PG in Sector 62" required />
               </div>
               <div className="col-span-1 md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
                 <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition resize-none"
-                  rows={3} placeholder="Describe the property..." />
+                  rows={3} placeholder="Describe amenities, location highlights..." />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Type</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Type *</label>
                 <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition bg-white">
                   <option value="PG">PG</option>
@@ -148,7 +225,7 @@ const Dashboard = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Gender</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Gender *</label>
                 <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition bg-white">
                   <option value="any">Any</option>
@@ -157,16 +234,16 @@ const Dashboard = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Rent (per month)</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Rent (Rs/month) *</label>
                 <input type="number" value={form.rent} onChange={(e) => setForm({ ...form, rent: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="8000" />
+                  placeholder="8000" min="0" required />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Deposit</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Security Deposit (Rs)</label>
                 <input type="number" value={form.deposit} onChange={(e) => setForm({ ...form, deposit: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="16000" />
+                  placeholder="16000" min="0" />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">Furnishing</label>
@@ -178,10 +255,10 @@ const Dashboard = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">City</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">City *</label>
                 <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="Noida" />
+                  placeholder="Noida" required />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">State</label>
@@ -190,7 +267,7 @@ const Dashboard = () => {
                   placeholder="Uttar Pradesh" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Street</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Street / Area</label>
                 <input value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
                   placeholder="Block A, Sector 62" />
@@ -205,10 +282,10 @@ const Dashboard = () => {
                 <label className="text-sm font-medium text-gray-700 block mb-1">Amenities (comma separated)</label>
                 <input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
-                  placeholder="WiFi, AC, Meals, Laundry" />
+                  placeholder="WiFi, AC, Meals, Laundry, Power Backup" />
               </div>
               <div className="col-span-1 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">Images (max 5)</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Upload New Images (Max 5)</label>
                 <input
                   type="file"
                   multiple
@@ -221,111 +298,152 @@ const Dashboard = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleCreate}
-              disabled={uploading}
-              className="mt-5 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50 w-full sm:w-auto"
-            >
-              {uploading ? 'Uploading images...' : 'Create Listing'}
-            </button>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={handleSubmit}
+                disabled={uploading}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
+              >
+                {uploading ? 'Uploading images...' : editingId ? 'Update Listing' : 'Publish Listing'}
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setEditingId(null); setForm(initialForm); }}
+                className="border border-gray-200 text-gray-600 px-5 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Total Listings', value: listings.length },
-            { label: 'Available', value: listings.filter((l) => l.isAvailable).length },
-            { label: 'Total Inquiries', value: inquiries.length },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-              <p className="text-3xl font-bold text-blue-600">{stat.value}</p>
-              <p className="text-gray-500 text-sm mt-1">{stat.label}</p>
+        {user?.role === 'owner' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+              <p className="text-3xl font-bold text-blue-600">{listings.length}</p>
+              <p className="text-gray-500 text-sm mt-1">Total Properties</p>
             </div>
-          ))}
-        </div>
-
-        {/* Listings — mobile cards / desktop table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800">My Listings</h2>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+              <p className="text-3xl font-bold text-green-600">{listings.filter((l) => l.isAvailable).length}</p>
+              <p className="text-gray-500 text-sm mt-1">Available Now</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+              <p className="text-3xl font-bold text-indigo-600">{inquiries.length}</p>
+              <p className="text-gray-500 text-sm mt-1">Active Inquiries</p>
+            </div>
           </div>
-          {listings.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 text-sm">No listings yet. Add your first listing.</div>
-          ) : (
-            <>
-              {/* Desktop Table */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                    <tr>
-                      <th className="text-left px-5 py-3">Title</th>
-                      <th className="text-left px-5 py-3">City</th>
-                      <th className="text-left px-5 py-3">Rent</th>
-                      <th className="text-left px-5 py-3">Type</th>
-                      <th className="text-left px-5 py-3">Status</th>
-                      <th className="text-left px-5 py-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {listings.map((listing) => (
-                      <tr key={listing._id} className="hover:bg-gray-50 transition">
-                        <td className="px-5 py-4 text-sm font-medium text-gray-800">{listing.title}</td>
-                        <td className="px-5 py-4 text-sm text-gray-500">{listing.address?.city}</td>
-                        <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
-                        <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
-                        <td className="px-5 py-4">
-                          <span className={"text-xs font-medium px-3 py-1 rounded-full " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
-                            {listing.isAvailable ? 'Available' : 'Unavailable'}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 flex gap-2">
-                          <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 hover:underline">Inquiries</button>
-                          <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 hover:underline">Delete</button>
-                        </td>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
+            <h2 className="font-semibold text-gray-800">My Sent Inquiries ({inquiries.length})</h2>
+          </div>
+        )}
+
+        {/* Owner Listings View */}
+        {user?.role === 'owner' && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-800">My Listings</h2>
+            </div>
+            {listings.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 text-sm">No listings yet. Click "+ Add Listing" to create your first listing.</div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                      <tr>
+                        <th className="text-left px-5 py-3">Title</th>
+                        <th className="text-left px-5 py-3">City</th>
+                        <th className="text-left px-5 py-3">Rent</th>
+                        <th className="text-left px-5 py-3">Type</th>
+                        <th className="text-left px-5 py-3">Status</th>
+                        <th className="text-left px-5 py-3">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {listings.map((listing) => (
+                        <tr key={listing._id} className="hover:bg-gray-50 transition">
+                          <td className="px-5 py-4 text-sm font-medium text-gray-800">
+                            <span onClick={() => navigate('/listings/' + listing._id)} className="cursor-pointer hover:text-blue-600">
+                              {listing.title}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-sm text-gray-500">{listing.address?.city}</td>
+                          <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
+                          <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
+                          <td className="px-5 py-4">
+                            <button
+                              onClick={() => handleToggleAvailability(listing)}
+                              title="Click to toggle availability"
+                              className={"text-xs font-medium px-3 py-1 rounded-full cursor-pointer transition " + (listing.isAvailable ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-red-50 text-red-500 hover:bg-red-100')}
+                            >
+                              {listing.isAvailable ? '✓ Available' : '✗ Unavailable'}
+                            </button>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 hover:underline">Inquiries</button>
+                              <button onClick={() => startEdit(listing)} className="text-xs text-gray-600 hover:text-blue-600">Edit</button>
+                              <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 hover:underline">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-              {/* Mobile Cards */}
-              <div className="md:hidden divide-y divide-gray-100">
-                {listings.map((listing) => (
-                  <div key={listing._id} className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-sm font-semibold text-gray-800 flex-1 pr-2">{listing.title}</p>
-                      <span className={"text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
-                        {listing.isAvailable ? 'Available' : 'Unavailable'}
-                      </span>
+                {/* Mobile Cards */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {listings.map((listing) => (
+                    <div key={listing._id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <p onClick={() => navigate('/listings/' + listing._id)} className="text-sm font-semibold text-gray-800 flex-1 pr-2 cursor-pointer">
+                          {listing.title}
+                        </p>
+                        <button
+                          onClick={() => handleToggleAvailability(listing)}
+                          className={"text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}
+                        >
+                          {listing.isAvailable ? 'Available' : 'Unavailable'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-1">{listing.address?.city} · {listing.type}</p>
+                      <p className="text-sm text-blue-600 font-medium mb-3">Rs {listing.rent?.toLocaleString()}/mo</p>
+                      <div className="flex gap-3">
+                        <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 font-medium hover:underline">View Inquiries</button>
+                        <button onClick={() => startEdit(listing)} className="text-xs text-gray-600 font-medium">Edit</button>
+                        <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 font-medium hover:underline">Delete</button>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mb-1">{listing.address?.city} · {listing.type}</p>
-                    <p className="text-sm text-blue-600 font-medium mb-3">Rs {listing.rent?.toLocaleString()}/mo</p>
-                    <div className="flex gap-3">
-                      <button onClick={() => { fetchInquiries(listing._id); setActiveTab('inquiries'); }} className="text-xs text-blue-600 font-medium hover:underline">View Inquiries</button>
-                      <button onClick={() => handleDelete(listing._id)} className="text-xs text-red-500 font-medium hover:underline">Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
-        {/* Inquiries */}
+        {/* Inquiries Section */}
         {inquiries.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mt-6">
             <div className="p-5 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-800">Inquiries</h2>
+              <h2 className="font-semibold text-gray-800">
+                {user?.role === 'owner' ? 'Listing Inquiries' : 'Inquiries You Sent'}
+              </h2>
             </div>
             <div className="divide-y divide-gray-50">
               {inquiries.map((inq) => (
                 <div key={inq._id} className="px-4 md:px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">{inq.tenant?.name}</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {inq.tenant?.name || inq.listing?.title}
+                      </p>
                       <p className="text-sm text-gray-500 mt-1 break-words">{inq.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">{inq.tenant?.email} · {inq.tenant?.phone}</p>
+                      {inq.tenant && (
+                        <p className="text-xs text-gray-400 mt-1">{inq.tenant.email} · {inq.tenant.phone}</p>
+                      )}
                     </div>
                     <span className={"text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap " + (
                       inq.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :

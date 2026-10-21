@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const listingSchema = new mongoose.Schema({
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   title: { type: String, required: true },
   description: { type: String },
   type: { type: String, enum: ['PG', 'flat', 'room'], required: true },
@@ -11,7 +11,7 @@ const listingSchema = new mongoose.Schema({
   furnishing: { type: String, enum: ['furnished', 'semi-furnished', 'unfurnished'], default: 'unfurnished' },
   address: {
     street: String,
-    city: { type: String, required: true },
+    city: { type: String, required: true, index: true },
     state: String,
     pincode: String,
   },
@@ -21,7 +21,10 @@ const listingSchema = new mongoose.Schema({
   },
   images: [String],
   amenities: [String],
-  isAvailable: { type: Boolean, default: true },
+  isAvailable: { type: Boolean, default: true, index: true },
 }, { timestamps: true });
+
+// Compound index for optimized filtering
+listingSchema.index({ 'address.city': 1, isAvailable: 1, rent: 1 });
 
 module.exports = mongoose.model('Listing', listingSchema);

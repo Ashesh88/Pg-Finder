@@ -14,8 +14,16 @@ const ListingDetail = () => {
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
 
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewMsg, setReviewMsg] = useState('');
+
   useEffect(() => {
     fetchListing();
+    fetchReviews();
   }, [id]);
 
   const fetchListing = async () => {
@@ -26,6 +34,15 @@ const ListingDetail = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const { data } = await API.get('/reviews/listing/' + id);
+      setReviews(data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -43,12 +60,33 @@ const ListingDetail = () => {
     }
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return navigate('/login');
+    setSubmittingReview(true);
+    setReviewMsg('');
+    try {
+      await API.post('/reviews', { listing: id, rating: Number(rating), comment });
+      setReviewMsg('Thank you! Your review has been submitted.');
+      setComment('');
+      fetchReviews();
+    } catch (err) {
+      setReviewMsg(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
   if (!listing) return <div className="min-h-screen flex items-center justify-center text-gray-400">Listing not found.</div>;
 
   const images = listing.images?.length > 0
     ? listing.images
     : ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop'];
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,7 +97,7 @@ const ListingDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Left */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
               <img
@@ -85,7 +123,7 @@ const ListingDetail = () => {
             <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                 <div className="flex-1">
-                  <div className="flex gap-2 mb-2 flex-wrap">
+                  <div className="flex gap-2 mb-2 flex-wrap items-center">
                     <span className="bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full">{listing.type}</span>
                     <span className={"text-xs font-semibold px-3 py-1 rounded-full " + (
                       listing.gender === 'male' ? 'bg-blue-50 text-blue-600' :
@@ -93,6 +131,11 @@ const ListingDetail = () => {
                       'bg-green-50 text-green-600'
                     )}>{listing.gender}</span>
                     <span className="bg-gray-50 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">{listing.furnishing}</span>
+                    {avgRating && (
+                      <span className="bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                        ★ {avgRating} ({reviews.length})
+                      </span>
+                    )}
                   </div>
                   <h1 className="text-xl md:text-2xl font-bold text-gray-800">{listing.title}</h1>
                   <p className="text-gray-500 mt-1 text-sm">{listing.address?.street}, {listing.address?.city}, {listing.address?.state} — {listing.address?.pincode}</p>
@@ -127,19 +170,96 @@ const ListingDetail = () => {
                 </div>
               )}
             </div>
+
+            {/* Ratings & Reviews Section */}
+            <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Ratings & Reviews</h3>
+                  <p className="text-gray-400 text-sm mt-0.5">
+                    {reviews.length === 0 ? 'No reviews yet' : `Average rating: ★ ${avgRating} / 5 based on ${reviews.length} reviews`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Add Review Form */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+                <h4 className="font-semibold text-sm text-gray-800 mb-3">Leave a Review</h4>
+                {reviewMsg && (
+                  <p className={"text-xs mb-3 font-medium " + (reviewMsg.includes('Thank') ? 'text-green-600' : 'text-red-500')}>
+                    {reviewMsg}
+                  </p>
+                )}
+                <form onSubmit={handleReviewSubmit} className="space-y-3">
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Your Rating</label>
+                    <div className="flex gap-2 items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className={"text-2xl transition " + (star <= rating ? 'text-amber-400' : 'text-gray-200')}
+                        >
+                          ★
+                        </button>
+                      ))}
+                      <span className="text-xs text-gray-500 ml-2 font-medium">({rating} Stars)</span>
+                    </div>
+                  </div>
+                  <div>
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Share your experience regarding food, cleanliness, wifi, locality..."
+                      rows={2}
+                      className="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 transition resize-none bg-white"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="bg-blue-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {submittingReview ? 'Submitting...' : user ? 'Post Review' : 'Login to Review'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {reviews.length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-4">Be the first tenant to leave a review for this property!</p>
+                ) : (
+                  reviews.map((r) => (
+                    <div key={r._id} className="border-b border-gray-50 pb-4 last:border-none">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-sm text-gray-800">{r.tenant?.name || 'Verified Tenant'}</span>
+                        <span className="text-amber-400 text-sm">{'★'.repeat(r.rating || 5)}</span>
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed">{r.comment}</p>
+                      <span className="text-gray-300 text-xs mt-1 block">
+                        {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Right */}
+          {/* Right Column */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
               <h3 className="font-semibold text-gray-800 mb-4">Listed by</h3>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg flex-shrink-0">
-                  {listing.owner?.name?.[0]}
+                  {listing.owner?.name?.[0] || 'O'}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800">{listing.owner?.name}</p>
-                  <p className="text-gray-400 text-sm">Property Owner</p>
+                  <p className="font-medium text-gray-800">{listing.owner?.name || 'Property Owner'}</p>
+                  <p className="text-gray-400 text-sm">Verified Host</p>
                 </div>
               </div>
               {listing.owner?.phone && (
@@ -147,7 +267,7 @@ const ListingDetail = () => {
                   href={`tel:${listing.owner.phone}`}
                   className="w-full block text-center bg-green-50 text-green-600 font-medium py-3 rounded-xl hover:bg-green-100 transition text-sm"
                 >
-                  📞 Call Owner
+                  📞 Call Owner ({listing.owner.phone})
                 </a>
               )}
             </div>

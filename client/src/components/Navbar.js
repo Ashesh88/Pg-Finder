@@ -13,6 +13,8 @@ const Navbar = () => {
     setMenuOpen(false);
   };
 
+  const displayName = user?.name ? user.name.split(' ')[0] : 'User';
+
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -26,7 +28,7 @@ const Navbar = () => {
           {user ? (
             <>
               <Link to="/dashboard" className="text-gray-600 hover:text-blue-600 font-medium transition">Dashboard</Link>
-              <span className="text-gray-500 text-sm">Hi, {user.name.split(' ')[0]}</span>
+              <span className="text-gray-500 text-sm">Hi, {displayName}</span>
               <button onClick={handleLogout} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition">Logout</button>
             </>
           ) : (
@@ -58,7 +60,7 @@ const Navbar = () => {
           {user ? (
             <>
               <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="text-gray-600 font-medium">Dashboard</Link>
-              <span className="text-gray-500 text-sm">Hi, {user.name.split(' ')[0]}</span>
+              <span className="text-gray-500 text-sm">Hi, {displayName}</span>
               <button onClick={handleLogout} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-medium text-left">Logout</button>
             </>
           ) : (

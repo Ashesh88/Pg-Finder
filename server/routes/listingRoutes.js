@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { createListing, getAllListings, getListingById, updateListing, deleteListing } = require('../controllers/listingController');
+const {
+  createListing,
+  getAllListings,
+  getMyListings,
+  getListingById,
+  updateListing,
+  deleteListing,
+} = require('../controllers/listingController');
 const { protect, ownerOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 router.get('/', getAllListings);
+router.get('/my', protect, ownerOnly, getMyListings);
 router.get('/:id', getListingById);
 router.post('/', protect, ownerOnly, createListing);
 router.post('/upload', protect, ownerOnly, upload.array('images', 5), (req, res) => {

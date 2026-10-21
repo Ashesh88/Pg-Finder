@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://pg-finder-backend-x3o7.onrender.com/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://pg-finder-backend-x3o7.onrender.com/api',
 });
 
 API.interceptors.request.use((config) => {
