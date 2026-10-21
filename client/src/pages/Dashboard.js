@@ -48,6 +48,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return navigate('/login');
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchData = async () => {

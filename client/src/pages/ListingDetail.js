@@ -34,6 +34,7 @@ const ListingDetail = () => {
   useEffect(() => {
     fetchListing();
     fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchListing = async () => {
